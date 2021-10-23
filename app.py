@@ -213,11 +213,14 @@ def update_skill_of_user():
 def get_user_skills(user_id):
     res = []
     user = career_onto.search(user_id=user_id)[0]
+    print('check user')
     for item in user.hasSkill:
+        print(item.skill_id[0])
         res.append({
             'skill_id': item.skill_id[0],
             'skill_name': item.skill_name[0]
         })
+    print('check skill')
     return jsonify(res), 200
 
 @app.route("/api/register", methods=['POST'])
