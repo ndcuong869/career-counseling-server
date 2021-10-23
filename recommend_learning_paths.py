@@ -53,8 +53,10 @@ def calculateWeight(require_skills, path, user_skills, alpha, beta):
         for skill in item['skills']:
             if skill not in user_skills and skill in require_skills:
                 item['user_gain'] = item['user_gain'] + 1
+                item['gain_skills'].append(skill)
             if skill not in user_skills and skill not in require_skills:
                 item['additional_gain'] = item['additional_gain'] + 1
+                item['additional_skills'].append(skill)
 
     # Normalize the paths' weight
     label_list = ['occupation_gain', 'user_gain', 'additional_gain']
@@ -86,7 +88,7 @@ def calculateWeight(require_skills, path, user_skills, alpha, beta):
 
     if len(path) > 0:
         print_response(normal_paths)
-        return [path[0]]
+        return path[0:3]
     else:
         return []
 

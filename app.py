@@ -10,7 +10,7 @@ import csv
 # Connect to ontology
 # path = "file://C:/Users/ndcuo/Downloads/career-counseling-chatbot/career-counseling-chatbot/CareerCounselingOntology.owl"
 # path = "file://D:/thesis report/data/ITCareerOntology.owl"
-path = "file://TestOntology_20210727.owl"
+path = "file://TestOntology_20211023.owl"
 career_onto = get_ontology(path).load()
 
 cred = credentials.Certificate('it-career-bot-firebase-adminsdk-kyvys-870e6b3f02.json')
@@ -26,6 +26,14 @@ skills_ref = db.collection('JobSpecificSkill')
 @app.route('/')
 def hello():
     return "You are connecting to Career Counseling server."
+
+@app.route('/api/careers')
+def getCareer():
+    careers = career_onto.search(occupation_name="*")
+    result = []
+    for item in careers:
+        result.append({"occupation_name": item.occupation_name[0]})
+    return jsonify(result), 200
 
 @app.route('/api/learning_paths/<occupation>/skills/require')
 def get_skills_of_occupation(occupation):
@@ -58,7 +66,10 @@ def get_job_specific_skills(occupation):
             "occupation_gain": 0,
             "user_gain": 0,
             "additional_gain": 0,
-            "total": 0
+            "total": 0,
+            "gain_skills": [],
+            "additional_skills": [],
+            "skill_numbers": 0
         }
 
         for course in item.hasCourse:
@@ -94,13 +105,41 @@ def get_job_specific_skills(occupation):
         user_skills.append(skills.skill_id[0])
     
     # Only select learning paths that have duration less than a value
-    print(len(learning_paths))
     learning_paths = filterLearningPaths(learning_paths, duration, unit)
     # Calculate and rank weight of learning paths
-    print(len(learning_paths))
     learning_paths = calculateWeight(require_skills, learning_paths, user_skills, 0.4, 0.3)
+
+    for id, item in enumerate(learning_paths):
+        learning_paths[id]['gain_skills_str'] = []
+        for skill in item['gain_skills']:
+            skill = career_onto.search(skill_id=skill)[0]
+            learning_paths[id]['gain_skills_str'].append(skill.skill_name[0])
+
     return jsonify(learning_paths), 200
 
+@app.route('/api/feedback', methods = ['POST'])
+def get_feedback():
+    params = request.get_json()
+    print(params)
+    auth_ref.document(params['user_id']).update({
+        'selected_path': params['selected_path'],
+        'score': params['score']
+    })
+    return {}, 200
+
+@app.route('/api/dashboard')
+def get_dashboard():
+    response = {}
+    token = request.args.get('token')
+    if token == '7eb42eb83e9beb2e29561cc568980168efbd6fbc7a774f7167abd633548ebb04':
+        users = auth_ref.stream()
+        response['total_users'] = len(list(users))
+        for user in users:
+            print(f'{user.id} => {user.to_dict()}')
+        print(response)
+        return jsonify(response), 200
+
+    return {}, 403
 
 @app.route('/api/courses')
 def get_course():
@@ -165,9 +204,8 @@ def update_skill_of_user():
         current_user.hasSkill.append(item)
     
     current_user = career_onto.search(user_id=user_id)[0]
-    print(current_user.hasSkill)
-    # career_onto.save(path)
-    # career_onto = get_ontology(path).load()
+    career_onto.save('./TestOntology_20211023.owl')
+    #career_onto = get_ontology(path).load()
 
     return {}, 200
 
@@ -202,7 +240,6 @@ def registerHandler():
 
         # Add skills
         user_skills = request.json['skills']
-        print(list(career_onto.classes()))
         new_user = career_onto.KnowWho(new_id)
         new_user.user_id= [new_id]
         current_user = career_onto.search(user_id=new_id)[0]
@@ -211,7 +248,8 @@ def registerHandler():
         for skill in user_skills:
             item = search_skill(career_onto, skill)
             current_user.hasSkill.append(item)
-    
+
+        career_onto.save("./TestOntology_20211023.owl")
         return {}, 200
     else:
         return {}, 403
