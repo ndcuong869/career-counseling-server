@@ -3926,11 +3926,5 @@
   <user_id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">USER003</user_id>
 </KnowWho>
 
-<KnowWho rdf:about="#USER004">
-  <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
-  <hasSkill rdf:resource="#SKILL009"/>
-  <user_id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">USER004</user_id>
-</KnowWho>
-
 
 </rdf:RDF>

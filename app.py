@@ -211,7 +211,11 @@ def update_skill_of_user():
 
 @app.route('/api/<user_id>/skills')
 def get_user_skills(user_id):
+    print('Hello world')
     res = []
+    users = career_onto.search(user_id='*')
+    for item in users:
+        print(item.user_id)
     user = career_onto.search(user_id=user_id)[0]
     print('check user')
     for item in user.hasSkill:
@@ -252,7 +256,7 @@ def registerHandler():
             item = search_skill(career_onto, skill)
             current_user.hasSkill.append(item)
 
-        career_onto.save("./TestOntology_20211023.owl")
+        career_onto.save('./TestOntology_20211023.owl')
         return {}, 200
     else:
         return {}, 403
@@ -314,4 +318,4 @@ def updateSkillHandler():
 
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5000)
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(debug=True)
