@@ -3932,5 +3932,17 @@
   <user_id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">USER004</user_id>
 </KnowWho>
 
+<KnowWho rdf:about="#USER005">
+  <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  <hasSkill rdf:resource="#SKILL017"/>
+  <hasSkill rdf:resource="#SKILL002"/>
+  <hasSkill rdf:resource="#SKILL014"/>
+  <hasSkill rdf:resource="#SKILL015"/>
+  <hasSkill rdf:resource="#SKILL024"/>
+  <hasSkill rdf:resource="#SKILL003"/>
+  <hasSkill rdf:resource="#SKILL082"/>
+  <user_id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">USER005</user_id>
+</KnowWho>
+
 
 </rdf:RDF>

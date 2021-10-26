@@ -4,6 +4,9 @@ from flask import jsonify
 from flask import request
 from owlready2 import *
 from flask_cors import CORS
+from datetime import date
+import time
+import datetime
 from firebase_admin import credentials, firestore, initialize_app
 import csv
 
@@ -120,7 +123,6 @@ def get_job_specific_skills(occupation):
 @app.route('/api/feedback', methods = ['POST'])
 def get_feedback():
     params = request.get_json()
-    print(params)
     auth_ref.document(params['user_id']).update({
         'selected_path': params['selected_path'],
         'score': params['score']
@@ -133,10 +135,24 @@ def get_dashboard():
     token = request.args.get('token')
     if token == '7eb42eb83e9beb2e29561cc568980168efbd6fbc7a774f7167abd633548ebb04':
         users = auth_ref.stream()
-        response['total_users'] = len(list(users))
-        for user in users:
-            print(f'{user.id} => {user.to_dict()}')
-        print(response)
+        user_list = list(users)
+        count = 0
+        current_time = time.time()
+        active1_count = 0
+        active24_count = 0
+        response['total_users'] = len(user_list)
+        for user in user_list:
+            data = user.to_dict()
+            if 'selected_path' in data.keys():
+                count = count + 1
+            if 'recent_login' in data.keys():
+                if (current_time - data['recent_login']) / 3600 < 1:
+                    active1_count = active1_count + 1
+                if (current_time - data['recent_login']) / 3600 < 24:
+                    active24_count = active24_count + 1
+        response['total_feedback'] = count
+        response['total_active_1'] = active1_count
+        response['total_active_24'] = active24_count
         return jsonify(response), 200
 
     return {}, 403
@@ -211,20 +227,18 @@ def update_skill_of_user():
 
 @app.route('/api/<user_id>/skills')
 def get_user_skills(user_id):
-    print('Hello world')
     res = []
     users = career_onto.search(user_id='*')
     for item in users:
         print(item.user_id)
     user = career_onto.search(user_id=user_id)[0]
-    print('check user')
     for item in user.hasSkill:
         print(item.skill_id[0])
         res.append({
             'skill_id': item.skill_id[0],
             'skill_name': item.skill_name[0]
         })
-    print('check skill')
+
     return jsonify(res), 200
 
 @app.route("/api/register", methods=['POST'])
@@ -275,6 +289,10 @@ def loginHandler():
     else:
         current_user = users[0]
         data = current_user.to_dict()
+        s = "01/01/1999"
+        auth_ref.document(current_user.id).update({
+            'recent_login': time.time()
+        })
         return jsonify({
             'id': current_user.id,
             'name': data['full_name'].split(" ")[-1]
